@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { saveToLocalStorage, loadFromLocalStorage } from '@/lib/localStorage';
+import { saveToLocalStorage, loadFromLocalStorage, isLocalStorageAvailable } from '@/lib/localStorage';
 import { Budget, Transaction, Goal, FinancialData } from '@/types/budget';
 import { toast } from 'sonner';
 
@@ -130,21 +130,46 @@ const FinancialContext = createContext<FinancialContextType | undefined>(undefin
 // Provider component
 export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [financialData, setFinancialData] = useState<FinancialData>(initialFinancialData);
+  const [isStorageAvailable, setIsStorageAvailable] = useState<boolean>(false);
+
+  // Check if localStorage is available
+  useEffect(() => {
+    const available = isLocalStorageAvailable();
+    setIsStorageAvailable(available);
+    
+    if (!available) {
+      console.warn('localStorage is not available. Data will not persist between sessions.');
+    }
+  }, []);
 
   // Load data from localStorage on component mount
   useEffect(() => {
-    const storedData = loadFromLocalStorage<FinancialData>('financialData', {
-      budgets: defaultBudgets,
-      transactions: defaultTransactions,
-      goals: defaultGoals,
-    });
-    setFinancialData(storedData);
-  }, []);
+    if (isStorageAvailable) {
+      const storedData = loadFromLocalStorage<FinancialData>('financialData', {
+        budgets: defaultBudgets,
+        transactions: defaultTransactions,
+        goals: defaultGoals,
+      });
+      
+      setFinancialData(storedData);
+      console.log('Loaded data from localStorage:', storedData);
+    } else {
+      // If localStorage isn't available, use the default data
+      setFinancialData({
+        budgets: defaultBudgets,
+        transactions: defaultTransactions,
+        goals: defaultGoals,
+      });
+    }
+  }, [isStorageAvailable]);
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
-    saveToLocalStorage('financialData', financialData);
-  }, [financialData]);
+    if (isStorageAvailable && financialData.budgets.length > 0) {
+      saveToLocalStorage('financialData', financialData);
+      console.log('Saved data to localStorage:', financialData);
+    }
+  }, [financialData, isStorageAvailable]);
 
   // Budget functions
   const addBudget = (budget: Omit<Budget, 'id'>) => {
@@ -235,11 +260,15 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Reset to mock data function
   const resetToMockData = () => {
-    setFinancialData({
+    const resetData = {
       budgets: defaultBudgets,
       transactions: defaultTransactions,
       goals: defaultGoals,
-    });
+    };
+    setFinancialData(resetData);
+    if (isStorageAvailable) {
+      saveToLocalStorage('financialData', resetData);
+    }
     toast.success('Reset to default data successfully');
   };
 

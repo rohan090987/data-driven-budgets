@@ -59,8 +59,13 @@ const GoalProgress: React.FC<GoalProgressProps> = ({ goals }) => {
                       {progress.toFixed(0)}%
                     </span>
                   </div>
-                  <Progress value={progress} className="h-2" 
-                    indicatorClassName={`bg-[${goal.color}]`} />
+                  <Progress 
+                    value={progress} 
+                    className="h-2" 
+                    style={{ 
+                      "--progress-indicator-color": goal.color
+                    } as React.CSSProperties}
+                  />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />

@@ -52,11 +52,16 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ initialData, onSubmit, onCancel
   });
 
   const handleSubmit = (data: FormData) => {
-    const budgetData = {
-      ...data,
+    // Ensure all required fields are present
+    const budgetData: Budget | Omit<Budget, 'id'> = {
+      category: data.category,
+      amount: data.amount,
+      spent: data.spent,
+      period: data.period,
       color: CATEGORY_COLORS[data.category] || '#6b7280', // Default gray if category color not found
       ...(initialData && { id: initialData.id }),
     };
+    
     onSubmit(budgetData);
   };
 
@@ -72,6 +77,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ initialData, onSubmit, onCancel
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
+                value={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -144,6 +150,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({ initialData, onSubmit, onCancel
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
+                value={field.value}
               >
                 <FormControl>
                   <SelectTrigger>

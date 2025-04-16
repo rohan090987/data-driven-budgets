@@ -48,13 +48,11 @@ const BudgetCard: React.FC<BudgetCardProps> = ({ budget, onEdit, onDelete }) => 
           <Progress 
             value={percentSpent} 
             className={percentSpent > 90 ? "bg-red-100" : "bg-gray-100"}
-            indicatorClassName={
-              percentSpent > 90 ? "bg-red-500" : 
-              percentSpent > 75 ? "bg-amber-500" : 
-              ""
-            }
             style={{ 
-              '--progress-indicator-color': percentSpent <= 75 ? budget.color : undefined
+              background: percentSpent > 90 ? "#fee2e2" : "#f3f4f6",
+              backgroundColor: percentSpent > 90 ? "#fee2e2" : "#f3f4f6",
+              "--progress-indicator-color": percentSpent <= 75 ? budget.color : 
+                percentSpent > 90 ? "#ef4444" : "#f59e0b"
             } as React.CSSProperties} 
           />
           

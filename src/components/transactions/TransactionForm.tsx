@@ -87,10 +87,17 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ initialData, onSubmit
   }, [description, isModelTrained, predictCategory, form, initialData]);
 
   const handleSubmit = (data: FormData) => {
-    onSubmit({
-      ...data,
+    // Ensure all required fields are present
+    const transactionData: Transaction | Omit<Transaction, 'id'> = {
+      description: data.description,
+      amount: data.amount,
+      category: data.category,
+      date: data.date,
+      type: data.type,
       ...(initialData && { id: initialData.id }),
-    });
+    };
+    
+    onSubmit(transactionData);
   };
 
   return (
