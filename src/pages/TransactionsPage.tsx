@@ -26,8 +26,8 @@ const TransactionsPage: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all-categories');
+  const [typeFilter, setTypeFilter] = useState('all-types');
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -77,10 +77,10 @@ const TransactionsPage: React.FC = () => {
     const matchesSearch = searchTerm === '' || 
       transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = categoryFilter === '' || 
+    const matchesCategory = categoryFilter === 'all-categories' || 
       transaction.category === categoryFilter;
     
-    const matchesType = typeFilter === '' || 
+    const matchesType = typeFilter === 'all-types' || 
       transaction.type === typeFilter;
     
     return matchesSearch && matchesCategory && matchesType;
@@ -143,7 +143,7 @@ const TransactionsPage: React.FC = () => {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all-categories">All Categories</SelectItem>
                 {DEFAULT_CATEGORIES.map((category) => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}
@@ -163,7 +163,7 @@ const TransactionsPage: React.FC = () => {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all-types">All Types</SelectItem>
                 <SelectItem value="income">Income</SelectItem>
                 <SelectItem value="expense">Expense</SelectItem>
               </SelectContent>
