@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, PieChart, Receipt, Target, Settings, Menu, X } from 'lucide-react';
+import { LayoutDashboard, PieChart, Receipt, Target, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
     { icon: PieChart, label: 'Budgets', path: '/budgets' },
     { icon: Receipt, label: 'Transactions', path: '/transactions' },
     { icon: Target, label: 'Goals', path: '/goals' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
   return (
@@ -74,11 +73,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, toggleSidebar }) => {
               ))}
             </ul>
           </nav>
-          
-          {/* Sidebar Footer */}
-          <div className="p-4 border-t border-budget-primary/20">
-            <p className="text-sm text-white/70">© 2025 BudgetTracker</p>
-          </div>
         </div>
       </aside>
     </>
