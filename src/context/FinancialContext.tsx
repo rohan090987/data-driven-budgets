@@ -127,6 +127,41 @@ interface FinancialContextType {
 // Create context
 const FinancialContext = createContext<FinancialContextType | undefined>(undefined);
 
+// Helper function to calculate budget spending from transactions
+const calculateBudgetSpending = (budgets: Budget[], transactions: Transaction[]): Budget[] => {
+  // Create a copy of budgets to work with
+  const updatedBudgets = [...budgets];
+  
+  // Get current month's transactions only (expenses)
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  
+  const currentMonthExpenses = transactions.filter(transaction => {
+    const transactionDate = new Date(transaction.date);
+    return (
+      transaction.type === 'expense' && 
+      transactionDate.getMonth() === currentMonth && 
+      transactionDate.getFullYear() === currentYear
+    );
+  });
+  
+  // Reset all budgets' spent amount to 0
+  updatedBudgets.forEach(budget => {
+    budget.spent = 0;
+  });
+  
+  // Sum up expenses by category
+  currentMonthExpenses.forEach(transaction => {
+    const budget = updatedBudgets.find(b => b.category === transaction.category);
+    if (budget) {
+      budget.spent += transaction.amount;
+    }
+  });
+  
+  return updatedBudgets;
+};
+
 // Provider component
 export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [financialData, setFinancialData] = useState<FinancialData>(initialFinancialData);
@@ -151,15 +186,27 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         goals: defaultGoals,
       });
       
-      setFinancialData(storedData);
+      // Calculate budget spending based on transactions
+      const budgetsWithSpending = calculateBudgetSpending(
+        storedData.budgets, 
+        storedData.transactions
+      );
+      
+      setFinancialData({
+        ...storedData,
+        budgets: budgetsWithSpending
+      });
+      
       console.log('Loaded data from localStorage:', storedData);
     } else {
       // If localStorage isn't available, use the default data
-      setFinancialData({
-        budgets: defaultBudgets,
+      const defaultDataWithSpending = {
+        budgets: calculateBudgetSpending(defaultBudgets, defaultTransactions),
         transactions: defaultTransactions,
         goals: defaultGoals,
-      });
+      };
+      
+      setFinancialData(defaultDataWithSpending);
     }
   }, [isStorageAvailable]);
 
@@ -206,26 +253,51 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ...transaction,
       id: uuidv4(),
     };
-    setFinancialData((prev) => ({
-      ...prev,
-      transactions: [...prev.transactions, newTransaction],
-    }));
+    
+    setFinancialData((prev) => {
+      const newTransactions = [...prev.transactions, newTransaction];
+      const updatedBudgets = calculateBudgetSpending(prev.budgets, newTransactions);
+      
+      return {
+        ...prev,
+        transactions: newTransactions,
+        budgets: updatedBudgets,
+      };
+    });
+    
     toast.success('Transaction added successfully');
   };
 
   const updateTransaction = (transaction: Transaction) => {
-    setFinancialData((prev) => ({
-      ...prev,
-      transactions: prev.transactions.map((t) => (t.id === transaction.id ? transaction : t)),
-    }));
+    setFinancialData((prev) => {
+      const updatedTransactions = prev.transactions.map((t) => 
+        (t.id === transaction.id ? transaction : t)
+      );
+      
+      const updatedBudgets = calculateBudgetSpending(prev.budgets, updatedTransactions);
+      
+      return {
+        ...prev,
+        transactions: updatedTransactions,
+        budgets: updatedBudgets,
+      };
+    });
+    
     toast.success('Transaction updated successfully');
   };
 
   const deleteTransaction = (id: string) => {
-    setFinancialData((prev) => ({
-      ...prev,
-      transactions: prev.transactions.filter((t) => t.id !== id),
-    }));
+    setFinancialData((prev) => {
+      const filteredTransactions = prev.transactions.filter((t) => t.id !== id);
+      const updatedBudgets = calculateBudgetSpending(prev.budgets, filteredTransactions);
+      
+      return {
+        ...prev,
+        transactions: filteredTransactions,
+        budgets: updatedBudgets,
+      };
+    });
+    
     toast.success('Transaction deleted successfully');
   };
 
@@ -261,7 +333,7 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Reset to mock data function
   const resetToMockData = () => {
     const resetData = {
-      budgets: defaultBudgets,
+      budgets: calculateBudgetSpending(defaultBudgets, defaultTransactions),
       transactions: defaultTransactions,
       goals: defaultGoals,
     };
