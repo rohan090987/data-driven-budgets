@@ -1,4 +1,3 @@
-
 import * as tf from '@tensorflow/tfjs';
 
 // This is a simple RNN model for text classification
@@ -52,35 +51,37 @@ export class TransactionClassifier {
     const vocabSize = Object.keys(this.wordIndex).length + 1;
     const numCategories = Object.keys(this.categoryIndex).length;
 
-    this.model = tf.sequential();
+    // Create a sequential model
+    const model = tf.sequential();
     
     // Add an embedding layer
-    this.model.add(tf.layers.embedding({
+    model.layers.push(tf.layers.embedding({
       inputDim: Math.max(vocabSize, 100),
       outputDim: 32,
       inputLength: this.maxSequenceLength
     }));
     
     // Add LSTM layer
-    this.model.add(tf.layers.lstm({
+    model.layers.push(tf.layers.lstm({
       units: 64,
       returnSequences: false
     }));
     
     // Add Dense layers with dropout
-    this.model.add(tf.layers.dense({ units: 32, activation: 'relu' }));
-    this.model.add(tf.layers.dropout({ rate: 0.3 }));
+    model.layers.push(tf.layers.dense({ units: 32, activation: 'relu' }));
+    model.layers.push(tf.layers.dropout({ rate: 0.3 }));
     
     // Output layer
-    this.model.add(tf.layers.dense({ units: numCategories, activation: 'softmax' }));
+    model.layers.push(tf.layers.dense({ units: numCategories, activation: 'softmax' }));
     
     // Compile model
-    this.model.compile({
+    model.compile({
       optimizer: 'adam',
       loss: 'categoricalCrossentropy',
       metrics: ['accuracy']
     });
 
+    this.model = model;
     this.initialized = true;
     console.log('RNN model built and compiled successfully');
   }

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -57,7 +56,11 @@ const GoalForm: React.FC<GoalFormProps> = ({ initialData, onSubmit, onCancel }) 
 
   const handleSubmit = (data: FormData) => {
     const goalData = {
-      ...data,
+      title: data.title,
+      targetAmount: data.targetAmount,
+      currentAmount: data.currentAmount,
+      deadline: data.deadline,
+      category: data.category,
       color: CATEGORY_COLORS[data.category] || '#6b7280', // Default gray if category color not found
       ...(initialData && { id: initialData.id }),
     };
