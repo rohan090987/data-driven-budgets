@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { useRNN } from '@/context/RNNContext';
@@ -6,6 +5,7 @@ import OverviewCard from '@/components/dashboard/OverviewCard';
 import BudgetOverview from '@/components/dashboard/BudgetOverview';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import GoalProgress from '@/components/dashboard/GoalProgress';
+import FinancialAdvisor from '@/components/dashboard/FinancialAdvisor';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { BrainCircuit, DollarSign, CreditCard, Target, TrendingUp } from 'lucide-react';
@@ -124,6 +124,7 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <BudgetOverview budgets={financialData.budgets} />
         <div className="space-y-6">
+          <FinancialAdvisor />
           <RecentTransactions transactions={financialData.transactions} />
           <GoalProgress goals={financialData.goals} />
         </div>
