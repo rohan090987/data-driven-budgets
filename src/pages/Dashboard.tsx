@@ -9,7 +9,7 @@ import GoalProgress from '@/components/dashboard/GoalProgress';
 import FinancialAdvisor from '@/components/dashboard/FinancialAdvisor';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, DollarSign, CreditCard, Target, TrendingUp } from 'lucide-react';
+import { BrainCircuit, DollarSign, CreditCard, Target, TrendingUp, Settings } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Dashboard: React.FC = () => {
@@ -82,6 +82,13 @@ const Dashboard: React.FC = () => {
               {isTraining ? 'Training...' : 'Train AI Model'}
             </Button>
           )}
+          
+          <Button asChild size="sm" variant="outline" className="gap-2">
+            <Link to="/settings">
+              <Settings className="h-4 w-4" />
+              Settings
+            </Link>
+          </Button>
           
           <Button asChild>
             <Link to="/transactions/new">Add Transaction</Link>

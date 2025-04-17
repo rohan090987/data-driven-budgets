@@ -1,217 +1,264 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import React, { useState, useRef, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Lightbulb, Send, Settings } from 'lucide-react';
 import { useFinancial } from '@/context/FinancialContext';
-import { Lightbulb, Send } from 'lucide-react';
+import { loadFromLocalStorage } from '@/lib/localStorage';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
-interface Message {
+type Message = {
   id: string;
-  type: 'user' | 'assistant';
+  role: 'user' | 'assistant';
   content: string;
-}
+  timestamp: Date;
+};
 
-const FinancialAdvisorDialog: React.FC<{
+interface FinancialAdvisorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}> = ({ open, onOpenChange }) => {
+}
+
+const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({ 
+  open, 
+  onOpenChange 
+}) => {
   const { financialData } = useFinancial();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'assistant',
-      content: 'Hello! I\'m your financial advisor. How can I help you today?'
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Load initial welcome message
+  useEffect(() => {
+    if (open && messages.length === 0) {
+      setMessages([
+        {
+          id: '1',
+          role: 'assistant',
+          content: "Hi there! I'm your financial advisor. How can I help you today? You can ask about budgeting, saving tips, or get insights on your spending habits.",
+          timestamp: new Date()
+        }
+      ]);
     }
-  ]);
-  const [inputValue, setInputValue] = useState('');
-  const [isThinking, setIsThinking] = useState(false);
-
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
-
-    // Add user message
-    const userMessageId = Date.now().toString();
-    setMessages(prev => [
-      ...prev,
-      {
-        id: userMessageId,
-        type: 'user',
-        content: inputValue
-      }
-    ]);
-
-    setInputValue('');
-    setIsThinking(true);
-
-    // Simulate AI thinking
-    setTimeout(() => {
-      generateResponse(inputValue);
-      setIsThinking(false);
-    }, 1000);
-  };
-
-  const generateResponse = (query: string) => {
-    let response = '';
-    const lowerQuery = query.toLowerCase();
-
-    // Generate contextual responses based on financial data and query
-    if (lowerQuery.includes('budget') || lowerQuery.includes('spending')) {
-      const totalBudget = financialData.budgets.reduce((sum, b) => sum + b.amount, 0);
-      const totalSpent = financialData.budgets.reduce((sum, b) => sum + b.spent, 0);
-      const percentUsed = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
+  }, [open, messages.length]);
+  
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+  
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+    
+    // Create user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input,
+      timestamp: new Date()
+    };
+    
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+    
+    try {
+      // Check if API key is available
+      const apiKey = loadFromLocalStorage('ai_api_key', '');
       
-      response = `You've used ${percentUsed}% of your total budget. `;
+      // Prepare financial context summary for the AI
+      const financialContext = {
+        totalIncome: financialData.transactions
+          .filter(t => t.type === 'income')
+          .reduce((sum, t) => sum + t.amount, 0),
+        totalExpenses: financialData.transactions
+          .filter(t => t.type === 'expense')
+          .reduce((sum, t) => sum + t.amount, 0),
+        topExpenseCategories: getTopExpenseCategories(),
+        budgetStatus: financialData.budgets
+          .map(b => `${b.category}: ${((b.spent / b.amount) * 100).toFixed(0)}% used`),
+        savingsGoals: financialData.goals
+          .map(g => `${g.name}: ${((g.currentAmount / g.targetAmount) * 100).toFixed(0)}% achieved`)
+      };
       
-      const overspentBudgets = financialData.budgets.filter(b => b.spent > b.amount);
-      if (overspentBudgets.length > 0) {
-        response += `You're over budget in ${overspentBudgets.length} categories: ${overspentBudgets.map(b => b.category).join(', ')}.`;
+      let response;
+      
+      // If API key is available, use external AI service
+      if (apiKey) {
+        // This is a placeholder for an actual API call to an AI service
+        // In a real implementation, you would make an API call here
+        console.log("Using API key:", apiKey);
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // For demo purposes, generate a response based on the query
+        response = generateAIResponse(userMessage.content, financialContext);
       } else {
-        response += "You're staying within your budget limits, great job!";
+        // Use local response generation for demo
+        await new Promise(resolve => setTimeout(resolve, 800));
+        response = generateAIResponse(userMessage.content, financialContext);
       }
-    } 
-    else if (lowerQuery.includes('save') || lowerQuery.includes('saving') || lowerQuery.includes('goal')) {
-      const totalGoals = financialData.goals.reduce((sum, g) => sum + g.targetAmount, 0);
-      const currentSavings = financialData.goals.reduce((sum, g) => sum + g.currentAmount, 0);
-      const percentSaved = totalGoals > 0 ? Math.round((currentSavings / totalGoals) * 100) : 0;
       
-      response = `You've saved ${percentSaved}% towards your goals. `;
-      
-      if (financialData.goals.length === 0) {
-        response = "You don't have any savings goals set up yet. Would you like to create one?";
-      }
-    }
-    else if (lowerQuery.includes('income') || lowerQuery.includes('earn')) {
-      const income = financialData.transactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0);
-      
-      response = `Your total income is $${income.toFixed(2)}. `;
-      
-      if (income === 0) {
-        response += "You haven't recorded any income yet. Would you like to add an income transaction?";
-      }
-    }
-    else if (lowerQuery.includes('expense') || lowerQuery.includes('spend')) {
-      const expenses = financialData.transactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
-      
-      response = `Your total expenses are $${expenses.toFixed(2)}. `;
-      
-      // Find top spending categories
-      const expensesByCategory: Record<string, number> = {};
-      financialData.transactions
-        .filter(t => t.type === 'expense')
-        .forEach(t => {
-          expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
-        });
-      
-      const sortedCategories = Object.entries(expensesByCategory)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3);
-      
-      if (sortedCategories.length > 0) {
-        response += `Your top spending categories are: ${sortedCategories.map(([cat, amount]) => 
-          `${cat} ($${amount.toFixed(2)})`).join(', ')}.`;
-      }
-    }
-    else if (lowerQuery.includes('tip') || lowerQuery.includes('advice') || lowerQuery.includes('suggest')) {
-      const tips = [
-        "Try the 50/30/20 rule: 50% for needs, 30% for wants, and 20% for savings.",
-        "Consider automating your savings by setting up automatic transfers.",
-        "Review your recurring subscriptions regularly to eliminate unused services.",
-        "Build an emergency fund that covers 3-6 months of expenses.",
-        "Track your spending regularly to identify areas where you can cut back."
-      ];
-      response = tips[Math.floor(Math.random() * tips.length)];
-    }
-    else {
-      // Default responses
-      const defaultResponses = [
-        "I can help you analyze your budget, track your spending, or provide financial tips. What would you like to know?",
-        "I'm here to assist with your financial questions. You can ask about your budget, savings goals, or spending habits.",
-        "I can provide insights on your financial situation. Would you like to know about your budget, income, or expenses?",
-        "Need help managing your finances? I can offer advice on budgeting, saving, or reducing expenses."
-      ];
-      response = defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
-    }
-
-    // Add assistant message
-    setMessages(prev => [
-      ...prev,
-      {
+      // Create AI response message
+      const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: response
-      }
-    ]);
+        role: 'assistant',
+        content: response,
+        timestamp: new Date()
+      };
+      
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Error generating AI response:", error);
+      toast.error("Failed to generate response. Please try again.");
+      
+      // Add error message
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I'm sorry, I encountered an error while processing your request. Please try again later.",
+        timestamp: new Date()
+      };
+      
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
-
+  
+  // Generate top expense categories for context
+  const getTopExpenseCategories = () => {
+    const expensesByCategory: Record<string, number> = {};
+    
+    financialData.transactions
+      .filter(t => t.type === 'expense')
+      .forEach(t => {
+        expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
+      });
+    
+    return Object.entries(expensesByCategory)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([category, amount]) => `${category}: $${amount.toFixed(2)}`);
+  };
+  
+  // Local AI response generation (would be replaced by API call in production)
+  const generateAIResponse = (query: string, context: any): string => {
+    const lowerQuery = query.toLowerCase();
+    
+    if (lowerQuery.includes('budget') || lowerQuery.includes('spending')) {
+      return `Based on your financial data, your total monthly income is $${context.totalIncome.toFixed(2)} and your expenses are $${context.totalExpenses.toFixed(2)}. Your top expense categories are ${context.topExpenseCategories.join(', ')}. ${context.totalIncome > context.totalExpenses ? 'You are currently spending within your means.' : 'Your expenses exceed your income, which is a concern.'}`;
+    } 
+    
+    if (lowerQuery.includes('save') || lowerQuery.includes('saving')) {
+      return `To improve your savings, consider the 50/30/20 rule: 50% for needs, 30% for wants, and 20% for savings. Based on your current income of $${context.totalIncome.toFixed(2)}, you should aim to save at least $${(context.totalIncome * 0.2).toFixed(2)} per month. Your saving goals progress: ${context.savingsGoals.join(', ')}.`;
+    }
+    
+    if (lowerQuery.includes('invest') || lowerQuery.includes('investment')) {
+      return `Before investing, ensure you have an emergency fund covering 3-6 months of expenses. Based on your current spending of $${context.totalExpenses.toFixed(2)} per month, aim for $${(context.totalExpenses * 4).toFixed(2)} in your emergency fund. Once that's established, consider diversified investments like index funds or ETFs.`;
+    }
+    
+    if (lowerQuery.includes('debt') || lowerQuery.includes('loan')) {
+      return `When managing debt, focus on high-interest debt first (like credit cards). Create a repayment plan prioritizing debts by interest rate. Based on your current income-to-expense ratio, allocate at least ${context.totalIncome > context.totalExpenses ? ((context.totalIncome - context.totalExpenses) * 0.5).toFixed(2) : '10%'} of your surplus to debt repayment.`;
+    }
+    
+    if (lowerQuery.includes('api') || lowerQuery.includes('key')) {
+      return `To enhance my capabilities, you can add an API key in the Settings page. This will enable more advanced financial insights and personalized recommendations based on your specific situation.`;
+    }
+    
+    // Default response
+    return `I'm your financial advisor, here to help with personalized advice based on your financial data. You can ask me about budgeting, saving strategies, investment tips, debt management, or any other financial questions. Your current income is $${context.totalIncome.toFixed(2)} and expenses are $${context.totalExpenses.toFixed(2)}.`;
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] h-[600px] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Lightbulb className="h-5 w-5 text-yellow-500" />
-            Financial Advisor
-          </DialogTitle>
+      <DialogContent className="max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl h-[80vh] max-h-[600px] flex flex-col p-0">
+        <DialogHeader className="px-4 py-3 border-b">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8 bg-budget-secondary/20">
+                <AvatarFallback>
+                  <Lightbulb className="h-4 w-4 text-budget-secondary" />
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <DialogTitle>Financial Advisor</DialogTitle>
+                <DialogDescription className="text-xs">
+                  AI-powered financial guidance
+                </DialogDescription>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/settings">
+                <Settings className="h-4 w-4 mr-1" />
+                Settings
+              </Link>
+            </Button>
+          </div>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4 mb-4">
+        <ScrollArea className="flex-1 p-4">
           <div className="space-y-4">
             {messages.map((message) => (
-              <Card 
+              <div 
                 key={message.id} 
-                className={`p-3 ${
-                  message.type === 'user' 
-                    ? 'bg-primary text-primary-foreground ml-12' 
-                    : 'bg-muted mr-12'
-                }`}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {message.content}
-              </Card>
-            ))}
-            {isThinking && (
-              <Card className="p-3 bg-muted mr-12">
-                <div className="flex space-x-2">
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                <div className={`max-w-[80%] rounded-lg px-3 py-2 ${
+                  message.role === 'user' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-muted'
+                }`}>
+                  <p className="text-sm">{message.content}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1 text-right">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
-              </Card>
-            )}
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
         
-        <DialogFooter className="flex sm:flex-row gap-2">
-          <div className="flex flex-1 items-center gap-2">
-            <Textarea 
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+        <div className="border-t p-2">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Ask a question about your finances..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask me anything about your finances..."
-              className="flex-1 min-h-[60px] resize-none"
-              disabled={isThinking}
+              disabled={isLoading}
+              className="flex-1"
             />
-            <Button 
-              onClick={handleSendMessage} 
-              disabled={!inputValue.trim() || isThinking}
-              size="icon"
-            >
-              <Send className="h-4 w-4" />
+            <Button onClick={handleSendMessage} disabled={isLoading || !input.trim()}>
+              {isLoading ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
             </Button>
           </div>
-        </DialogFooter>
+          <p className="text-xs text-muted-foreground mt-1 px-2">
+            {loadFromLocalStorage('ai_api_key', '') 
+              ? "Using enhanced AI capabilities" 
+              : "For better assistance, add your API key in Settings"}
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
   );

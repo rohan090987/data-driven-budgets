@@ -1,16 +1,30 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFinancial } from '@/context/FinancialContext';
 import { useRNN } from '@/context/RNNContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { BrainCircuit, Save, Database, Download, Cloud } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { BrainCircuit, Save, Database, Download, Cloud, Key } from 'lucide-react';
 import { toast } from 'sonner';
+import { loadFromLocalStorage, saveToLocalStorage } from '@/lib/localStorage';
 
 const SettingsPage: React.FC = () => {
   const { resetToMockData } = useFinancial();
   const { isModelTrained, isTraining, trainModel } = useRNN();
+  const [aiApiKey, setAiApiKey] = useState('');
+  
+  // Load API key from localStorage on component mount
+  useEffect(() => {
+    const savedApiKey = loadFromLocalStorage('ai_api_key', '');
+    setAiApiKey(savedApiKey);
+  }, []);
+  
+  const handleSaveApiKey = () => {
+    saveToLocalStorage('ai_api_key', aiApiKey);
+    toast.success('API key saved successfully');
+  };
   
   const handleExportData = () => {
     try {
@@ -54,6 +68,37 @@ const SettingsPage: React.FC = () => {
       </div>
       
       <div className="grid gap-6">
+        {/* AI API Configuration */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              AI API Configuration
+            </CardTitle>
+            <CardDescription>
+              Configure your AI assistant API key
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <h4 className="font-medium">API Key</h4>
+              <p className="text-sm text-muted-foreground">
+                Enter your AI service API key to enable enhanced financial insights
+              </p>
+              <div className="flex gap-2">
+                <Input 
+                  type="password"
+                  value={aiApiKey}
+                  onChange={(e) => setAiApiKey(e.target.value)}
+                  placeholder="Enter your API key"
+                  className="flex-1"
+                />
+                <Button onClick={handleSaveApiKey}>Save Key</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
         {/* AI Model Settings */}
         <Card>
           <CardHeader>

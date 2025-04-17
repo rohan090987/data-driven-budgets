@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import BudgetsPage from "./pages/BudgetsPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import GoalsPage from "./pages/GoalsPage";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +31,7 @@ const App = () => (
                 <Route path="transactions" element={<TransactionsPage />} />
                 <Route path="transactions/new" element={<TransactionsPage />} />
                 <Route path="goals" element={<GoalsPage />} />
-                <Route path="settings" element={<Navigate to="/" replace />} />
+                <Route path="settings" element={<SettingsPage />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
