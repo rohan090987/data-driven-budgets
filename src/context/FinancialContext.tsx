@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { saveToLocalStorage, loadFromLocalStorage, isLocalStorageAvailable } from '@/lib/localStorage';
@@ -7,6 +6,7 @@ import { toast } from 'sonner';
 
 // Sample colors for categories
 export const CATEGORY_COLORS: Record<string, string> = {
+  // Expense categories
   'Housing': '#3b82f6', // Blue
   'Food': '#22c55e', // Green
   'Transportation': '#f59e0b', // Amber
@@ -19,12 +19,35 @@ export const CATEGORY_COLORS: Record<string, string> = {
   'Travel': '#84cc16', // Lime
   'Debt': '#d97706', // Amber dark
   'Savings': '#059669', // Emerald
+  
+  // Income categories
+  'Salary': '#10b981', // Green
+  'Freelance': '#0ea5e9', // Sky blue
+  'Investment': '#6366f1', // Indigo
+  'Gifts': '#f43f5e', // Rose
+  'Refunds': '#a855f7', // Purple
+  'Rental': '#0891b2', // Cyan dark
+  'Business': '#f97316', // Orange
+  'Other Income': '#6b7280', // Gray
+  
+  // General category
   'Income': '#10b981', // Green
   'Other': '#6b7280', // Gray
 };
 
 // Default categories
-export const DEFAULT_CATEGORIES = Object.keys(CATEGORY_COLORS);
+export const DEFAULT_EXPENSE_CATEGORIES = [
+  'Housing', 'Food', 'Transportation', 'Entertainment', 'Shopping', 
+  'Utilities', 'Healthcare', 'Personal', 'Education', 'Travel', 
+  'Debt', 'Savings', 'Other'
+];
+
+export const DEFAULT_INCOME_CATEGORIES = [
+  'Salary', 'Freelance', 'Investment', 'Gifts', 'Refunds', 
+  'Rental', 'Business', 'Other Income'
+];
+
+export const DEFAULT_CATEGORIES = [...DEFAULT_EXPENSE_CATEGORIES, ...DEFAULT_INCOME_CATEGORIES];
 
 // Sample mock data
 const defaultBudgets: Budget[] = [

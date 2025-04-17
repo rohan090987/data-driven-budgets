@@ -21,10 +21,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DEFAULT_CATEGORIES, CATEGORY_COLORS } from '@/context/FinancialContext';
+import { 
+  DEFAULT_EXPENSE_CATEGORIES, 
+  DEFAULT_INCOME_CATEGORIES, 
+  CATEGORY_COLORS 
+} from '@/context/FinancialContext';
 import { Transaction } from '@/types/budget';
 import { useRNN } from '@/context/RNNContext';
 import { Loader2 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const formSchema = z.object({
   description: z.string().min(2, { message: 'Description is required' }),
@@ -62,15 +67,23 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ initialData, onSubmit
   });
 
   const description = form.watch('description');
+  const transactionType = form.watch('type');
+  
+  // Reset category when transaction type changes
+  useEffect(() => {
+    if (!initialData) {
+      form.setValue('category', '');
+    }
+  }, [transactionType, form, initialData]);
   
   // Predict category when description changes
   useEffect(() => {
     const predictTransactionCategory = async () => {
-      if (description && description.length > 3 && isModelTrained && !initialData) {
+      if (description && description.length > 3 && isModelTrained && !initialData && transactionType === 'expense') {
         setIsPredicting(true);
         try {
           const category = await predictCategory(description);
-          if (category && DEFAULT_CATEGORIES.includes(category)) {
+          if (category && DEFAULT_EXPENSE_CATEGORIES.includes(category)) {
             form.setValue('category', category);
           }
         } catch (error) {
@@ -84,7 +97,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ initialData, onSubmit
     // Use a debounce to avoid too many predictions
     const timer = setTimeout(predictTransactionCategory, 500);
     return () => clearTimeout(timer);
-  }, [description, isModelTrained, predictCategory, form, initialData]);
+  }, [description, isModelTrained, predictCategory, form, initialData, transactionType]);
 
   const handleSubmit = (data: FormData) => {
     // Ensure all required fields are present
@@ -99,6 +112,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ initialData, onSubmit
     
     onSubmit(transactionData);
   };
+
+  // Get the appropriate categories based on transaction type
+  const availableCategories = transactionType === 'income' 
+    ? DEFAULT_INCOME_CATEGORIES 
+    : DEFAULT_EXPENSE_CATEGORIES;
 
   return (
     <Form {...form}>
@@ -138,6 +156,32 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ initialData, onSubmit
 
         <FormField
           control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select transaction type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="income">Income</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="category"
           render={({ field }) => (
             <FormItem>
@@ -147,7 +191,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ initialData, onSubmit
               </FormLabel>
               <Select
                 onValueChange={field.onChange}
-                defaultValue={field.value}
                 value={field.value}
               >
                 <FormControl>
@@ -156,20 +199,22 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ initialData, onSubmit
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {DEFAULT_CATEGORIES.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: CATEGORY_COLORS[category] }}
-                        />
-                        {category}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  <ScrollArea className="h-60">
+                    {availableCategories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: CATEGORY_COLORS[category] }}
+                          />
+                          {category}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </ScrollArea>
                 </SelectContent>
               </Select>
-              {isModelTrained && (
+              {isModelTrained && transactionType === 'expense' && (
                 <FormDescription>
                   Categories are automatically suggested based on the description
                 </FormDescription>
@@ -188,31 +233,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ initialData, onSubmit
               <FormControl>
                 <Input type="date" {...field} />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Type</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select transaction type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
-                </SelectContent>
-              </Select>
               <FormMessage />
             </FormItem>
           )}
