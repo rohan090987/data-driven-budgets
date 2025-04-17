@@ -121,7 +121,7 @@ const FinancialAdvisor: React.FC = () => {
           description: 'Train the AI model to automatically categorize your transactions based on their descriptions.',
           icon: <Lightbulb className="h-5 w-5 text-indigo-500" />,
           action: 'Train AI',
-          actionUrl: '/settings'
+          actionUrl: '/'
         });
       }
       

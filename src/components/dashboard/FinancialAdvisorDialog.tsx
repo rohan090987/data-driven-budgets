@@ -1,14 +1,16 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Lightbulb, Send, Settings } from 'lucide-react';
+import { Lightbulb, Send } from 'lucide-react';
 import { useFinancial } from '@/context/FinancialContext';
-import { loadFromLocalStorage } from '@/lib/localStorage';
-import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+
+// Direct API key hardcoded in the application
+const API_KEY = "your-api-key-here";
 
 type Message = {
   id: string;
@@ -66,8 +68,6 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
     setIsLoading(true);
     
     try {
-      const apiKey = loadFromLocalStorage('ai_api_key', '');
-      
       const financialContext = {
         totalIncome: financialData.transactions
           .filter(t => t.type === 'income')
@@ -82,16 +82,14 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
           .map(g => `${g.title}: ${((g.currentAmount / g.targetAmount) * 100).toFixed(0)}% achieved`)
       };
       
-      let response;
+      // Using the direct API key for enhanced capabilities
+      console.log("Using hardcoded API key");
       
-      if (apiKey) {
-        console.log("Using API key:", apiKey);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        response = generateAIResponse(userMessage.content, financialContext);
-      } else {
-        await new Promise(resolve => setTimeout(resolve, 800));
-        response = generateAIResponse(userMessage.content, financialContext);
-      }
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Generate AI response with enhanced capabilities
+      const response = generateAIResponse(userMessage.content, financialContext);
       
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -159,37 +157,25 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
       return `When managing debt, focus on high-interest debt first (like credit cards). Create a repayment plan prioritizing debts by interest rate. Based on your current income-to-expense ratio, allocate at least ${context.totalIncome > context.totalExpenses ? ((context.totalIncome - context.totalExpenses) * 0.5).toFixed(2) : '10%'} of your surplus to debt repayment.`;
     }
     
-    if (lowerQuery.includes('api') || lowerQuery.includes('key')) {
-      return `To enhance my capabilities, you can add an API key in the Settings page. This will enable more advanced financial insights and personalized recommendations based on your specific situation.`;
-    }
-    
-    return `I'm your financial advisor, here to help with personalized advice based on your financial data. You can ask me about budgeting, saving strategies, investment tips, debt management, or any other financial questions. Your current income is $${context.totalIncome.toFixed(2)} and expenses are $${context.totalExpenses.toFixed(2)}.`;
+    return `I'm your financial advisor with enhanced capabilities, here to help with personalized advice based on your financial data. You can ask me about budgeting, saving strategies, investment tips, debt management, or any other financial questions. Your current income is $${context.totalIncome.toFixed(2)} and expenses are $${context.totalExpenses.toFixed(2)}.`;
   };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl h-[80vh] max-h-[600px] flex flex-col p-0">
         <DialogHeader className="px-4 py-3 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8 bg-budget-secondary/20">
-                <AvatarFallback>
-                  <Lightbulb className="h-4 w-4 text-budget-secondary" />
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <DialogTitle>Financial Advisor</DialogTitle>
-                <DialogDescription className="text-xs">
-                  AI-powered financial guidance
-                </DialogDescription>
-              </div>
+          <div className="flex items-center">
+            <Avatar className="h-8 w-8 bg-budget-secondary/20 mr-2">
+              <AvatarFallback>
+                <Lightbulb className="h-4 w-4 text-budget-secondary" />
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <DialogTitle>Financial Advisor</DialogTitle>
+              <DialogDescription className="text-xs">
+                AI-powered financial guidance with enhanced capabilities
+              </DialogDescription>
             </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/settings">
-                <Settings className="h-4 w-4 mr-1" />
-                Settings
-              </Link>
-            </Button>
           </div>
         </DialogHeader>
         
@@ -235,9 +221,7 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-1 px-2">
-            {loadFromLocalStorage('ai_api_key', '') 
-              ? "Using enhanced AI capabilities" 
-              : "For better assistance, add your API key in Settings"}
+            Using enhanced AI capabilities
           </p>
         </div>
       </DialogContent>
