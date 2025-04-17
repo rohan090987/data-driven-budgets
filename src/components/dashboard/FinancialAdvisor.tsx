@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useFinancial } from '@/context/FinancialContext';
 import { useRNN } from '@/context/RNNContext';
@@ -11,8 +11,10 @@ import {
   TrendingDown, 
   PiggyBank, 
   CreditCard, 
-  BadgeAlert 
+  BadgeAlert,
+  MessageSquare
 } from 'lucide-react';
+import FinancialAdvisorDialog from './FinancialAdvisorDialog';
 
 type Advice = {
   id: string;
@@ -29,6 +31,7 @@ const FinancialAdvisor: React.FC = () => {
   const [advices, setAdvices] = useState<Advice[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentAdviceIndex, setCurrentAdviceIndex] = useState(0);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // Generate advice based on financial data
   const generateAdvice = () => {
@@ -155,63 +158,78 @@ const FinancialAdvisor: React.FC = () => {
   const currentAdvice = advices[currentAdviceIndex];
 
   return (
-    <Card className="relative overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="h-5 w-5 text-yellow-500" />
-          Financial Advisor
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isGenerating ? (
-          <div className="flex flex-col items-center justify-center py-6">
-            <Loader2 className="h-8 w-8 text-budget-secondary animate-spin mb-2" />
-            <p className="text-muted-foreground text-sm">Analyzing your financial data...</p>
-          </div>
-        ) : advices.length > 0 ? (
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-1">{currentAdvice.icon}</div>
-              <div>
-                <h3 className="font-medium">{currentAdvice.title}</h3>
-                <p className="text-sm text-muted-foreground">{currentAdvice.description}</p>
+    <>
+      <Card className="relative overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2">
+            <Lightbulb className="h-5 w-5 text-yellow-500" />
+            Financial Advisor
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isGenerating ? (
+            <div className="flex flex-col items-center justify-center py-6">
+              <Loader2 className="h-8 w-8 text-budget-secondary animate-spin mb-2" />
+              <p className="text-muted-foreground text-sm">Analyzing your financial data...</p>
+            </div>
+          ) : advices.length > 0 ? (
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-1">{currentAdvice.icon}</div>
+                <div>
+                  <h3 className="font-medium">{currentAdvice.title}</h3>
+                  <p className="text-sm text-muted-foreground">{currentAdvice.description}</p>
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-center justify-between">
-              {currentAdvice.action ? (
-                <Button variant="outline" size="sm" asChild>
-                  <a href={currentAdvice.actionUrl}>
-                    {currentAdvice.action}
-                  </a>
-                </Button>
-              ) : (
-                <div />
-              )}
-              
-              {advices.length > 1 && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={showNextAdvice}
-                  className="gap-1"
-                >
-                  Next Tip
-                  <ArrowRight className="h-3 w-3" />
-                </Button>
-              )}
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-muted-foreground mb-4">No advice available yet. Add more financial data to get personalized insights.</p>
+              <Button onClick={generateAdvice} size="sm">
+                Generate Advice
+              </Button>
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-6">
-            <p className="text-muted-foreground mb-4">No advice available yet. Add more financial data to get personalized insights.</p>
-            <Button onClick={generateAdvice} size="sm">
-              Generate Advice
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-between pt-0">
+          {currentAdvice?.action ? (
+            <Button variant="outline" size="sm" asChild>
+              <a href={currentAdvice.actionUrl}>
+                {currentAdvice.action}
+              </a>
+            </Button>
+          ) : (
+            <div />
+          )}
+          
+          <div className="flex gap-2">
+            {advices.length > 1 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={showNextAdvice}
+                className="gap-1"
+              >
+                Next Tip
+                <ArrowRight className="h-3 w-3" />
+              </Button>
+            )}
+            
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={() => setDialogOpen(true)}
+              className="gap-1"
+            >
+              <MessageSquare className="h-3 w-3" />
+              Chat
             </Button>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardFooter>
+      </Card>
+      
+      <FinancialAdvisorDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+    </>
   );
 };
 
