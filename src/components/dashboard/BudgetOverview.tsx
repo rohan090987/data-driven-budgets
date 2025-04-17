@@ -17,7 +17,7 @@ const CustomTooltip = ({ active, payload }: any) => {
     return (
       <div className="bg-white p-2 border rounded shadow text-sm">
         <p className="font-medium">{data.category}</p>
-        <p>{`${data.spent.toFixed(2)} of ${data.amount.toFixed(2)}`}</p>
+        <p>{`$${data.spent.toFixed(2)} of $${data.amount.toFixed(2)}`}</p>
         <p>{`${((data.spent / data.amount) * 100).toFixed(1)}%`}</p>
       </div>
     );
@@ -29,14 +29,16 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgets }) => {
   // Sort budgets by percentage spent (highest first)
   const sortedBudgets = [...budgets].sort((a, b) => (b.spent / b.amount) - (a.spent / a.amount));
   
-  // Format data for pie chart
-  const pieData = budgets.map((budget) => ({
-    category: budget.category,
-    amount: budget.amount,
-    spent: budget.spent,
-    value: budget.spent,
-    color: budget.color,
-  }));
+  // Format data for pie chart - only include budgets with spent > 0 to avoid graph issues
+  const pieData = budgets
+    .filter(budget => budget.spent > 0)
+    .map((budget) => ({
+      category: budget.category,
+      amount: budget.amount,
+      spent: budget.spent,
+      value: budget.spent,
+      color: budget.color,
+    }));
 
   return (
     <Card className="col-span-1 md:col-span-2">
@@ -47,7 +49,7 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgets }) => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {/* Pie Chart */}
           <div className="md:col-span-2 h-52">
-            {budgets.length > 0 ? (
+            {pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -58,6 +60,7 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgets }) => {
                     outerRadius={75}
                     dataKey="value"
                     nameKey="category"
+                    paddingAngle={2}
                   >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -68,7 +71,7 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgets }) => {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center">
-                <p className="text-muted-foreground">No budgets available</p>
+                <p className="text-muted-foreground">No spending data available</p>
               </div>
             )}
           </div>
