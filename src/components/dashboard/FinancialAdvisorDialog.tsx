@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,6 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Load initial welcome message
   useEffect(() => {
     if (open && messages.length === 0) {
       setMessages([
@@ -47,7 +45,6 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
     }
   }, [open, messages.length]);
   
-  // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -57,7 +54,6 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
   const handleSendMessage = async () => {
     if (!input.trim()) return;
     
-    // Create user message
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -70,10 +66,8 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
     setIsLoading(true);
     
     try {
-      // Check if API key is available
       const apiKey = loadFromLocalStorage('ai_api_key', '');
       
-      // Prepare financial context summary for the AI
       const financialContext = {
         totalIncome: financialData.transactions
           .filter(t => t.type === 'income')
@@ -85,29 +79,20 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
         budgetStatus: financialData.budgets
           .map(b => `${b.category}: ${((b.spent / b.amount) * 100).toFixed(0)}% used`),
         savingsGoals: financialData.goals
-          .map(g => `${g.name}: ${((g.currentAmount / g.targetAmount) * 100).toFixed(0)}% achieved`)
+          .map(g => `${g.title}: ${((g.currentAmount / g.targetAmount) * 100).toFixed(0)}% achieved`)
       };
       
       let response;
       
-      // If API key is available, use external AI service
       if (apiKey) {
-        // This is a placeholder for an actual API call to an AI service
-        // In a real implementation, you would make an API call here
         console.log("Using API key:", apiKey);
-        
-        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // For demo purposes, generate a response based on the query
         response = generateAIResponse(userMessage.content, financialContext);
       } else {
-        // Use local response generation for demo
         await new Promise(resolve => setTimeout(resolve, 800));
         response = generateAIResponse(userMessage.content, financialContext);
       }
       
-      // Create AI response message
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -120,7 +105,6 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
       console.error("Error generating AI response:", error);
       toast.error("Failed to generate response. Please try again.");
       
-      // Add error message
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -141,7 +125,6 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
     }
   };
   
-  // Generate top expense categories for context
   const getTopExpenseCategories = () => {
     const expensesByCategory: Record<string, number> = {};
     
@@ -157,7 +140,6 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
       .map(([category, amount]) => `${category}: $${amount.toFixed(2)}`);
   };
   
-  // Local AI response generation (would be replaced by API call in production)
   const generateAIResponse = (query: string, context: any): string => {
     const lowerQuery = query.toLowerCase();
     
@@ -181,7 +163,6 @@ const FinancialAdvisorDialog: React.FC<FinancialAdvisorDialogProps> = ({
       return `To enhance my capabilities, you can add an API key in the Settings page. This will enable more advanced financial insights and personalized recommendations based on your specific situation.`;
     }
     
-    // Default response
     return `I'm your financial advisor, here to help with personalized advice based on your financial data. You can ask me about budgeting, saving strategies, investment tips, debt management, or any other financial questions. Your current income is $${context.totalIncome.toFixed(2)} and expenses are $${context.totalExpenses.toFixed(2)}.`;
   };
   
