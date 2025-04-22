@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Plus, Target, Calendar } from 'lucide-react';
 import { Goal } from '@/types/budget';
+import { useFinancial } from '@/context/FinancialContext';
 
 interface GoalCardProps {
   goal: Goal;
@@ -14,9 +14,12 @@ interface GoalCardProps {
 }
 
 const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onContribute }) => {
+  const { predictGoalAchievement } = useFinancial();
+
   const progress = (goal.currentAmount / goal.targetAmount) * 100;
   const remaining = goal.targetAmount - goal.currentAmount;
-  
+  const achievementLikelihood = predictGoalAchievement(goal);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', { 
@@ -82,7 +85,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onContribut
             </p>
           </div>
           
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Calendar className="h-3 w-3" />
               <span>
@@ -92,15 +95,22 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onContribut
               </span>
             </div>
             
-            <Button 
-              size="sm" 
-              variant="secondary"
-              onClick={() => onContribute(goal)}
-              className="gap-1"
-            >
-              <Plus className="h-3 w-3" /> Add funds
-            </Button>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Target className="h-3 w-3" />
+              <span>
+                Goal Achievement Likelihood: {achievementLikelihood}%
+              </span>
+            </div>
           </div>
+          
+          <Button 
+            size="sm" 
+            variant="secondary"
+            onClick={() => onContribute(goal)}
+            className="gap-1 mt-2"
+          >
+            <Plus className="h-3 w-3" /> Add funds
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -108,3 +118,4 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit, onDelete, onContribut
 };
 
 export default GoalCard;
+
