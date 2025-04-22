@@ -8,7 +8,7 @@ This project is a data-driven budgeting application designed to help users track
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone https://github.com/rohan090987/data-driven-budgets.git
 
 # Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
