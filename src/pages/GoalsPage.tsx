@@ -1,18 +1,17 @@
-
 import React, { useState } from 'react';
-import { useFinancial } from '@/context/FinancialContext';
-import GoalCard from '@/components/goals/GoalCard';
-import GoalForm from '@/components/goals/GoalForm';
-import ContributeForm from '@/components/goals/ContributeForm';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useFinancial } from '../context/FinancialContext';
+import GoalCard from '../components/goals/GoalCard';
+import GoalForm from '../components/goals/GoalForm';
+import ContributeForm from '../components/goals/ContributeForm';
+import { Button } from '../components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { AlertCircle, Plus } from 'lucide-react';
-import { Goal } from '@/types/budget';
+import { Goal } from '../types/budget';
 import { toast } from 'sonner';
 
 const GoalsPage: React.FC = () => {
-  const { financialData, addGoal, updateGoal, deleteGoal } = useFinancial();
+  const { financialData, addGoal, updateGoal, deleteGoal, predictGoalAchievement } = useFinancial();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isContributeDialogOpen, setIsContributeDialogOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | undefined>(undefined);
@@ -83,26 +82,27 @@ const GoalsPage: React.FC = () => {
       </div>
       
       {financialData.goals.length === 0 ? (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>No goals yet</AlertTitle>
-          <AlertDescription>
-            Create your first savings goal to start tracking your progress
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {financialData.goals.map((goal) => (
-            <GoalCard
-              key={goal.id}
-              goal={goal}
-              onEdit={handleEditGoal}
-              onDelete={handleDeleteGoal}
-              onContribute={handleContributeDialogOpen}
-            />
-          ))}
-        </div>
-      )}
+  <Alert>
+    <AlertCircle className="h-4 w-4" />
+    <AlertTitle>No goals yet</AlertTitle>
+    <AlertDescription>
+      Create your first savings goal to start tracking your progress
+    </AlertDescription>
+  </Alert>
+) : (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {financialData.goals.map((goal) => (
+      <GoalCard
+        key={goal.id}
+        goal={goal}
+        onEdit={handleEditGoal}
+        onDelete={handleDeleteGoal}
+        onContribute={handleContributeDialogOpen}
+      />
+    ))}
+  </div>
+)}
+
       
       {/* Goal Form Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
