@@ -145,6 +145,7 @@ interface FinancialContextType {
   updateGoal: (goal: Goal) => void;
   deleteGoal: (id: string) => void;
   resetToMockData: () => void;
+  predictGoalAchievement: (goal: Goal) => number;
 }
 
 // Create context
@@ -367,6 +368,35 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     toast.success('Reset to default data successfully');
   };
 
+  // Goal Achievement Prediction function
+  const predictGoalAchievement = (goal: Goal): number => {
+    const now = new Date();
+    const deadline = new Date(goal.deadline);
+    const timeLeft = deadline.getTime() - now.getTime();
+    if (timeLeft <= 0) {
+      // Deadline passed
+      return goal.currentAmount >= goal.targetAmount ? 100 : 0;
+    }
+
+    const daysLeft = timeLeft / (1000 * 60 * 60 * 24);
+    const amountLeft = goal.targetAmount - goal.currentAmount;
+    if (amountLeft <= 0) {
+      return 100;
+    }
+
+    // Estimate average daily saving rate based on current progress and elapsed time
+    const startDate = new Date();
+    startDate.setFullYear(startDate.getFullYear() - 1); // Assume 1 year ago as start for estimation
+    const elapsedDays = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+    const averageDailySaving = goal.currentAmount / elapsedDays;
+
+    // Predict if goal is achievable
+    const requiredDailySaving = amountLeft / daysLeft;
+    const likelihood = Math.min(100, (averageDailySaving / requiredDailySaving) * 100);
+
+    return Math.round(likelihood);
+  };
+
   return (
     <FinancialContext.Provider
       value={{
@@ -381,6 +411,7 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updateGoal,
         deleteGoal,
         resetToMockData,
+        predictGoalAchievement,
       }}
     >
       {children}
@@ -396,3 +427,4 @@ export const useFinancial = () => {
   }
   return context;
 };
+
