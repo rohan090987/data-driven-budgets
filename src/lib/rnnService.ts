@@ -55,24 +55,24 @@ export class TransactionClassifier {
     const model = tf.sequential();
     
     // Add an embedding layer
-    model.layers.push(tf.layers.embedding({
+    model.add(tf.layers.embedding({
       inputDim: Math.max(vocabSize, 100),
       outputDim: 32,
       inputLength: this.maxSequenceLength
     }));
     
     // Add LSTM layer
-    model.layers.push(tf.layers.lstm({
+    model.add(tf.layers.lstm({
       units: 64,
       returnSequences: false
     }));
     
     // Add Dense layers with dropout
-    model.layers.push(tf.layers.dense({ units: 32, activation: 'relu' }));
-    model.layers.push(tf.layers.dropout({ rate: 0.3 }));
+    model.add(tf.layers.dense({ units: 32, activation: 'relu' }));
+    model.add(tf.layers.dropout({ rate: 0.3 }));
     
     // Output layer
-    model.layers.push(tf.layers.dense({ units: numCategories, activation: 'softmax' }));
+    model.add(tf.layers.dense({ units: numCategories, activation: 'softmax' }));
     
     // Compile model
     model.compile({
@@ -199,3 +199,4 @@ export const getClassifier = (categories: string[]): TransactionClassifier => {
   }
   return classifierInstance;
 };
+
