@@ -1,5 +1,3 @@
-
-import React from 'react';
 import {
   Table,
   TableBody,
@@ -12,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Transaction } from '@/types/budget';
+
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -52,11 +51,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
               <TableRow key={transaction.id}>
                 <TableCell>
                   {transaction.type === 'income' ? (
-                    <div className="bg-green-100 p-1 rounded-full w-8 h-8 flex items-center justify-center">
+                    <div className="bg-green-100 p-1 rounded-full w-8 h-8 flex items-center justify-center rotate-180">
                       <ArrowUpRight className="h-4 w-4 text-green-600" />
                     </div>
                   ) : (
-                    <div className="bg-red-100 p-1 rounded-full w-8 h-8 flex items-center justify-center">
+                    <div className="bg-red-100 p-1 rounded-full w-8 h-8 flex items-center justify-center rotate-[-90deg]">
                       <ArrowDownRight className="h-4 w-4 text-red-600" />
                     </div>
                   )}
@@ -105,3 +104,4 @@ const TransactionList: React.FC<TransactionListProps> = ({
 };
 
 export default TransactionList;
+
